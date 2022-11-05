@@ -1,3 +1,4 @@
+import { GetServerSideProps } from 'next';
 import Image from 'next/image';
 
 import appLogoImg from '@/assets/app-logo.svg';
@@ -5,7 +6,15 @@ import appPreviewImg from '@/assets/app-nlw-copa-preview.png';
 import iconCheckImg from '@/assets/icon-check.svg';
 import usersAvatarExampleImg from '@/assets/users-avatar-example.png';
 
-export default function Home() {
+import { api } from 'services/api';
+
+type HomeProps = {
+  poolsCount: number;
+  guessCount: number;
+  userCount: number;
+};
+
+export default function Home({ poolsCount, guessCount, userCount }: HomeProps) {
   return (
     <div className="max-w-[1124px] h-screen mx-auto grid grid-cols-2 gap-28 items-center">
       <main>
@@ -18,8 +27,8 @@ export default function Home() {
         <div className="mt-10 flex items-center gap-2">
           <Image src={usersAvatarExampleImg} alt="" quality={100} />
           <strong className="text-gray-100 text-xl">
-            <span className="text-ignite-500">+12.592</span> pessoas já estão
-            usando
+            <span className="text-ignite-500">+{userCount}</span> pessoas já
+            estão usando
           </strong>
         </div>
 
@@ -44,18 +53,18 @@ export default function Home() {
         </p>
 
         <div className="mt-10 pt-10 border-t border-gray-600 flex justify-between text-gray-100">
-          <div className="flex items-center">
+          <div className="flex items-center gap-6">
             <Image src={iconCheckImg} alt="" quality={100} />
             <div className="flex flex-col">
-              <span className="font-bold text-2xl">+2.034</span>
+              <span className="font-bold text-2xl">+{poolsCount}</span>
               <span>Bolões criados</span>
             </div>
           </div>
           <div className="w-px h-14 bg-gray-600" />
-          <div className="flex items-center">
+          <div className="flex items-center gap-6">
             <Image src={iconCheckImg} alt="" quality={100} />
             <div className="flex flex-col">
-              <span className="font-bold text-2xl">+192.847</span>
+              <span className="font-bold text-2xl">+{guessCount}</span>
               <span>Palpites enviados</span>
             </div>
           </div>
@@ -69,3 +78,20 @@ export default function Home() {
     </div>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const [poolCountResponse, guessCountResponse, userCountResponse] =
+    await Promise.all([
+      api.get('/pools/count'),
+      api.get('/guesses/count'),
+      api.get('/users/count'),
+    ]);
+
+  return {
+    props: {
+      poolsCount: poolCountResponse.data.count,
+      guessCount: guessCountResponse.data.count,
+      userCount: userCountResponse.data.count,
+    },
+  };
+};
